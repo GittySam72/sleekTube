@@ -58,7 +58,7 @@ def crtFolder(fldname):
 
 
 def main(page: Page):
-    page.title = "YT-Downloader App"
+    page.title = "SleekTube - YT-Downloader App"
     page.fonts = {
         "B6": "https://github.com/google/fonts/blob/main/ofl/b612mono/B612Mono-Bold.ttf",
         "Kanit": "https://raw.githubusercontent.com/google/fonts/master/ofl/kanit/Kanit-Bold.ttf"
@@ -126,7 +126,7 @@ def main(page: Page):
                 MaxFileSize = fileSizeInBytes/1024000
                 MB = str(int(round(MaxFileSize))) + " MB"
                 try:
-                    pb = ProgressBar(width=400,color="blue")
+                    pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
                     tasks_view.controls.append(
                         Column(
                         controls=[
@@ -167,7 +167,7 @@ def main(page: Page):
                 MB = str(int(round(MaxFileSize))) + " MB"
                 print("File Size = {:00.00f} MB".format(MaxFileSize))
                 try:
-                    pb = ProgressBar(width=400,color="blue")
+                    pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
                     tasks_view.controls.append(
                         Column(
                         controls=[
@@ -205,12 +205,12 @@ def main(page: Page):
             view.update()
             for cnt, video in zip(range(0, len(c.videos)), c.videos):
                 try:
-                    video1 = video.streams.get_highest_resolution()
+                    video1 = video.streams.filter(only_audio=True).first()
                     destination = base_dir + artist_name.value
                     fileSizeInBytes = video1.filesize
                     MaxFileSize = fileSizeInBytes/1024000
                     MB = str(int(round(MaxFileSize))) + " MB"
-                    pb = ProgressBar(width=400,color="blue")
+                    pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
                     tasks_view.controls.append(
                         Column(
                         controls=[
@@ -246,7 +246,7 @@ def main(page: Page):
             view.update()
         else:
             p = pytube.Playlist(url_id.value)
-            status_view.controls.append(Text('<<<< Status >>>>', color=colors.BLUE))
+            status_view.controls.append(Text('<<<< Status >>>>', color=colors.BLACK87))
             status_view.controls.append(Text(f'Downloading videos by: {p.title}' + ' playlist'))
             status_view.controls.append(Text('Playlist Contains:' + str(len(p.videos)) + ' videos', color=colors.BLUE))
             view.update()
@@ -254,12 +254,12 @@ def main(page: Page):
     
             for cnt, video in zip(range(0, len(p.videos)), p.videos):
                 try:
-                    video1 = video.streams.get_highest_resolution()
+                    video1 = video.streams.filter(only_audio=True).first()
                     destination = base_dir + artist_name.value
                     fileSizeInBytes = video1.filesize
                     MaxFileSize = fileSizeInBytes/1024000
                     MB = str(int(round(MaxFileSize))) + " MB"
-                    pb = ProgressBar(width=400,color="blue")
+                    pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
                     tasks_view.controls.append(
                         Column(
                         controls=[
@@ -305,7 +305,7 @@ def main(page: Page):
         expand=True,
         controls=[
             #1
-                Row([Text(value="YT-Downloader", style="headlineMedium")],alignment="center"),
+                Row([Text(value="SleekTube", style="headlineMedium")],alignment="center"),
                 
                 #2
                 Divider(),
