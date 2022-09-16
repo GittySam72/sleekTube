@@ -130,13 +130,13 @@ def main(page: Page):
                     tasks_view.controls.append(
                         Column(
                         controls=[
-                            Text( str(cnt+1) + ' -->> ' + ' Downloading  ' + video.title, font_family=default),
+                            Text( str(cnt+1) + '  ' + u"\u27F6" + '   Downloading  ' + video.title, font_family=default),
                             Row([Text(value="↳"),pb,Text("File Size = " + MB, font_family=default)])]
                             )
                         )
                     for i in range(0, 101):
                         pb.value = i * 0.01
-                        sf = int(round(MaxFileSize)) / 3
+                        sf = int(round(MaxFileSize)) / 2
                         sleep(sf * 0.1)
                         view.update()
 
@@ -145,7 +145,7 @@ def main(page: Page):
                     tasks_view.controls.pop()
                     tasks_view.controls.append(Row(
                         controls=[st, Text(
-                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default),
+                            str(cnt+1) + '  ' + u"\u27F6" + '  ' + video.title + ' has been successfully downloaded.', font_family=default),
                             Text("File Size = " + MB, font_family=default)]
                     ))
                     view.update()
@@ -171,13 +171,13 @@ def main(page: Page):
                     tasks_view.controls.append(
                         Column(
                         controls=[
-                            Text( str(cnt+1) + ' -->> ' + ' Downloading  ' + video.title, font_family=default),
+                            Text( str(cnt+1) + '  ' + u"\u27F6" + '   Downloading  ' + video.title, font_family=default),
                             Row([Text(value="↳"),pb,Text("File Size = " + MB, font_family=default)])]
                             )
                         )
                     for i in range(0, 101):
                         pb.value = i * 0.01
-                        sf = int(round(MaxFileSize)) / 3
+                        sf = int(round(MaxFileSize)) / 2
                         sleep(sf * 0.1)
                         view.update()
 
@@ -186,7 +186,7 @@ def main(page: Page):
                     tasks_view.controls.pop()
                     tasks_view.controls.append(Row(
                         controls=[st, Text(
-                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default),
+                            str(cnt+1) + '  ' + u"\u27F6" + '  ' + video.title  + ' has been successfully downloaded.', font_family=default),
                             Text("File Size = " + MB, font_family=default)]
                     ))
                     view.update()
@@ -214,13 +214,14 @@ def main(page: Page):
                     tasks_view.controls.append(
                         Column(
                         controls=[
-                            Text( str(cnt+1) + ' -->> ' + ' Downloading  ' + video.title, font_family=default),
+                            Text( str(cnt+1) + '  ' + u"\u27F6" + '   Downloading  ' + video.title, font_family=default),
                             Row([Text(value="↳"),pb,Text("File Size = " + MB, font_family=default)])]
                             )
                         )
                     for i in range(0, 101):
                         pb.value = i * 0.01
-                        sleep(0.1)
+                        sf = int(round(MaxFileSize)) / 3
+                        sleep(sf * 0.1)
                         view.update()
 
                     view.update()
@@ -234,7 +235,7 @@ def main(page: Page):
                     tasks_view.controls.pop()
                     tasks_view.controls.append(Row(
                         controls=[st, Text(
-                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default),
+                            str(cnt+1) + '  ' + u"\u27F6" + '  ' + video.title  + ' has been successfully downloaded.', font_family=default),
                             Text("File Size = " + MB, font_family=default)]
                     ))
                     view.update()
@@ -252,23 +253,24 @@ def main(page: Page):
             print(f'Downloading videos by: {p.title}' + ' playlist')
     
             for cnt, video in zip(range(0, len(p.videos)), p.videos):
-                video1 = video.streams.get_highest_resolution()
-                destination = base_dir + artist_name.value
-                fileSizeInBytes = video1.filesize
-                MaxFileSize = fileSizeInBytes/1024000
-                MB = str(int(round(MaxFileSize))) + " MB"
                 try:
+                    video1 = video.streams.get_highest_resolution()
+                    destination = base_dir + artist_name.value
+                    fileSizeInBytes = video1.filesize
+                    MaxFileSize = fileSizeInBytes/1024000
+                    MB = str(int(round(MaxFileSize))) + " MB"
                     pb = ProgressBar(width=400,color="blue")
                     tasks_view.controls.append(
                         Column(
                         controls=[
-                            Text( str(cnt+1) + ' -->> ' + ' Downloading  ' + video.title, font_family=default),
+                            Text( str(cnt+1) + '  ' + u"\u27F6" + '   Downloading  ' + video.title, font_family=default),
                             Row([Text(value="↳"),pb,Text("File Size = " + MB, font_family=default)])]
                             )
                         )
                     for i in range(0, 101):
                         pb.value = i * 0.01
-                        sleep(0.1)
+                        sf = int(round(MaxFileSize)) / 3
+                        sleep(sf * 0.1)
                         view.update()
 
                     view.update()
@@ -284,7 +286,7 @@ def main(page: Page):
                         Row(
                         controls=[
                             st,
-                            Text(str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default),
+                            Text(str(cnt+1) + '  ' + u"\u27F6" + '  ' + video.title + ' has been successfully downloaded.', font_family=default),
                             Text("File Size = " + MB, font_family=default)]
                             )
                         )
@@ -350,8 +352,13 @@ def main(page: Page):
 
                     bgcolor=colors.WHITE,
                     width=1360,
-                    height=350,
-                )
+                    height=300,
+                ),
+                Row(
+
+                controls=[Text('made with \u2764\ufe0f by SAM'),
+                          ],
+            ),
 
         ],
     )
