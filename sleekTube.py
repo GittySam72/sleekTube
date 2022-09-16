@@ -6,6 +6,7 @@ import flet
 import pytube
 import os
 import sys
+from time import sleep
 from termcolor import colored
 from pytube import YouTube
 import os
@@ -41,6 +42,7 @@ from flet import (
     Icon,
     alignment,
     colors,
+    ProgressBar,
     Container
 )
 
@@ -91,93 +93,137 @@ def main(page: Page):
         Radio(value="playlist", label="Playlist")], spacing=5), on_change=radiogroup_changed)
 
     def get_directory_result(e: FilePickerResultEvent):
-        directory_path.value = e.path if e.path else "Cancelled!"
-        directory_path.update()
+        pathText.value = e.path if e.path else "Cancelled!"
+        pathText.update()
         global base_dir
         base_dir = e.path + '/'
 
     get_directory_dialog = FilePicker(on_result=get_directory_result)
-    directory_path = Text()
+    pathText = Text()
     page.overlay.extend([get_directory_dialog])
 
-    def add_clicked(e):
+    def downloadAction(e):
         view.update()
         crtFolder(artist_name.value)
         if (frmt.value == 'mp3'):
             MP3_downloader()
         else:
             MP4_downloader()
-        status_view.controls.append(
-            Row([Text(value="All Songs Downloaded Successfully", weight="bold")]))
-        view.update()
+        
 
+    
+        
     def MP4_downloader():
         if (url_type.value == 'channel'):
             c = pytube.Channel(url_id.value)
-            status_view.controls.append(
-                Text('<<<< Status >>>>', color=colors.BLUE))
-            status_view.controls.append(
-                Text(f'Downloading videos from: {c.channel_name}' + ' channel'))
-            status_view.controls.append(Text(
-                'Channel Contains:' + str(len(c.videos)) + ' videos', color=colors.BLUE))
+            status_view.controls.append(Text(f'Downloading videos from: {c.channel_name}' + ' channel'))
+            status_view.controls.append(Text('Channel Contains:' + str(len(c.videos)) + ' videos', color=colors.BLUE))
             view.update()
-            tasks_view.controls.append(
-                Text('<<<< Download Details >>>>', color=colors.BLUE))
-            print(f'Downloading videos from Channel: {c.channel_name}')
             for cnt, video in zip(range(0, len(c.videos)), c.videos):
+                video = video.streams.get_highest_resolution()
+                destination = base_dir + artist_name.value
+                fileSizeInBytes = video.filesize
+                MaxFileSize = fileSizeInBytes/1024000
+                MB = str(int(round(MaxFileSize))) + " MB"
                 try:
-                    destination = base_dir + artist_name.value
-                    video.streams.get_highest_resolution().download(output_path=destination)
+                    pb = ProgressBar(width=400,color="blue")
+                    tasks_view.controls.append(
+                        Column(
+                        controls=[
+                            Text( str(cnt+1) + ' -->> ' + ' Downloading  ' + video.title, font_family=default),
+                            Row([Text(value="↳"),pb,Text("File Size = " + MB, font_family=default)])]
+                            )
+                        )
+                    for i in range(0, 101):
+                        pb.value = i * 0.01
+                        sf = int(round(MaxFileSize)) / 3
+                        sleep(sf * 0.1)
+                        view.update()
+
+                    view.update()
+                    video.download(output_path=destination)
+                    tasks_view.controls.pop()
                     tasks_view.controls.append(Row(
                         controls=[st, Text(
-                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default)]
+                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default),
+                            Text("File Size = " + MB, font_family=default)]
                     ))
                     view.update()
-                    print(colored(video.title, 'cyan') +
-                          " has been successfully downloaded.")
+                    print(colored(video.title, 'cyan') + " has been successfully downloaded.")
                 except:
                     pass
-        else:
-            p = pytube.Playlist(id)
-            status_view.controls.append(
-                Text('<<<< Status >>>>', color=colors.BLUE))
-            status_view.controls.append(
-                Text(f'Downloading videos from: {p.title}' + ' channel'))
-            status_view.controls.append(Text(
-                'Channel Contains:' + str(len(p.videos)) + ' videos', color=colors.BLUE))
+            status_view.controls.append(Row([Text(value="All Videos Downloaded Successfully", weight="bold")]))
             view.update()
-            tasks_view.controls.append(
-                Text('<<<< Download Details >>>>', color=colors.BLUE))
-            print(f'Downloading videos from Channel: {c.channel_name}')
+        else:
+            p = pytube.Playlist(url_id.value)
+            status_view.controls.append(Text(f'Downloading videos from: {p.title}' + ' channel'))
+            status_view.controls.append(Text('Playlis Contains:' + str(len(p.videos)) + ' videos', color=colors.BLUE))
+            view.update()
             for cnt, video in zip(range(0, len(p.videos)), p.videos):
+                video = video.streams.get_highest_resolution()
+                destination = base_dir + artist_name.value
+                fileSizeInBytes = video.filesize
+                MaxFileSize = fileSizeInBytes/1024000
+                MB = str(int(round(MaxFileSize))) + " MB"
+                print("File Size = {:00.00f} MB".format(MaxFileSize))
                 try:
-                    destination = base_dir + artist_name.value
-                    video.streams.get_highest_resolution().download(output_path=destination)
+                    pb = ProgressBar(width=400,color="blue")
+                    tasks_view.controls.append(
+                        Column(
+                        controls=[
+                            Text( str(cnt+1) + ' -->> ' + ' Downloading  ' + video.title, font_family=default),
+                            Row([Text(value="↳"),pb,Text("File Size = " + MB, font_family=default)])]
+                            )
+                        )
+                    for i in range(0, 101):
+                        pb.value = i * 0.01
+                        sf = int(round(MaxFileSize)) / 3
+                        sleep(sf * 0.1)
+                        view.update()
+
+                    view.update()
+                    video.download(output_path=destination)
+                    tasks_view.controls.pop()
                     tasks_view.controls.append(Row(
                         controls=[st, Text(
-                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default)]
+                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default),
+                            Text("File Size = " + MB, font_family=default)]
                     ))
                     view.update()
-                    print(colored(video.title, 'cyan') +
-                          " has been successfully downloaded.")
+                    print(colored(video.title, 'cyan') + " has been successfully downloaded.")
                 except:
                     pass
+            status_view.controls.append(Row([Text(value="All Videos Downloaded Successfully", weight="bold")]))
+            view.update()
+
 
     def MP3_downloader():
         if (url_type.value == 'channel'):
             c = pytube.Channel(url_id.value)
-            status_view.controls.append(
-                Text('<<<< Status >>>>', color=colors.BLUE))
-            status_view.controls.append(
-                Text(f'Downloading videos from: {c.channel_name}' + ' channel'))
-            status_view.controls.append(Text(
-                'Channel Contains:' + str(len(c.videos)) + ' videos', color=colors.BLUE))
+            status_view.controls.append(Text(f'Downloading videos from: {c.channel_name}' + ' channel'))
+            status_view.controls.append(Text('Channel Contains:' + str(len(c.videos)) + ' videos', color=colors.BLUE))
             view.update()
-            tasks_view.controls.append(
-                Text('<<<< Download Details >>>>', color=colors.BLUE))
-            print(f'Downloading videos from Channel: {c.channel_name}')
             for cnt, video in zip(range(0, len(c.videos)), c.videos):
                 try:
+                    video1 = video.streams.get_highest_resolution()
+                    destination = base_dir + artist_name.value
+                    fileSizeInBytes = video1.filesize
+                    MaxFileSize = fileSizeInBytes/1024000
+                    MB = str(int(round(MaxFileSize))) + " MB"
+                    pb = ProgressBar(width=400,color="blue")
+                    tasks_view.controls.append(
+                        Column(
+                        controls=[
+                            Text( str(cnt+1) + ' -->> ' + ' Downloading  ' + video.title, font_family=default),
+                            Row([Text(value="↳"),pb,Text("File Size = " + MB, font_family=default)])]
+                            )
+                        )
+                    for i in range(0, 101):
+                        pb.value = i * 0.01
+                        sleep(0.1)
+                        view.update()
+
+                    view.update()
                     destination = base_dir + artist_name.value
                     out_file = video.streams.filter(
                         only_audio=True).first().download(output_path=destination)
@@ -185,107 +231,127 @@ def main(page: Page):
                     base, ext = os.path.splitext(out_file)
                     new_file = base + '.mp3'
                     os.rename(out_file, new_file)
+                    tasks_view.controls.pop()
                     tasks_view.controls.append(Row(
                         controls=[st, Text(
-                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default)]
+                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default),
+                            Text("File Size = " + MB, font_family=default)]
                     ))
                     view.update()
-                    print(colored(video.title, 'cyan') +
-                          " has been successfully downloaded.")
+                    print(colored(video.title, 'cyan') + " has been successfully downloaded.")
                 except:
                     pass
+            status_view.controls.append(Row([Text(value="All Songs Downloaded Successfully", weight="bold")]))
+            view.update()
         else:
             p = pytube.Playlist(url_id.value)
-            status_view.controls.append(
-                Text('<<<< Status >>>>', color=colors.BLUE))
-            status_view.controls.append(
-                Text(f'Downloading videos by: {p.title}' + ' playlist'))
-            status_view.controls.append(Text(
-                'Playlist Contains:' + str(len(p.videos)) + ' videos', color=colors.BLUE))
+            status_view.controls.append(Text('<<<< Status >>>>', color=colors.BLUE))
+            status_view.controls.append(Text(f'Downloading videos by: {p.title}' + ' playlist'))
+            status_view.controls.append(Text('Playlist Contains:' + str(len(p.videos)) + ' videos', color=colors.BLUE))
             view.update()
             print(f'Downloading videos by: {p.title}' + ' playlist')
-            tasks_view.controls.append(
-                Text('<<<< Download Details >>>>', color=colors.BLUE))
+    
             for cnt, video in zip(range(0, len(p.videos)), p.videos):
+                video1 = video.streams.get_highest_resolution()
+                destination = base_dir + artist_name.value
+                fileSizeInBytes = video1.filesize
+                MaxFileSize = fileSizeInBytes/1024000
+                MB = str(int(round(MaxFileSize))) + " MB"
                 try:
+                    pb = ProgressBar(width=400,color="blue")
+                    tasks_view.controls.append(
+                        Column(
+                        controls=[
+                            Text( str(cnt+1) + ' -->> ' + ' Downloading  ' + video.title, font_family=default),
+                            Row([Text(value="↳"),pb,Text("File Size = " + MB, font_family=default)])]
+                            )
+                        )
+                    for i in range(0, 101):
+                        pb.value = i * 0.01
+                        sleep(0.1)
+                        view.update()
+
+                    view.update()
                     destination = base_dir + artist_name.value
-                    out_file = video.streams.filter(
-                        only_audio=True).first().download(output_path=destination)
+                    out_file = video.streams.filter(only_audio=True).first().download(output_path=destination)
                     # save the file
                     base, ext = os.path.splitext(out_file)
                     new_file = base + '.mp3'
                     os.rename(out_file, new_file)
                     # result of success
-                    # result of success
-                    tasks_view.controls.append(Row(
-                        controls=[st, Text(
-                            str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default)]
-                    ))
+                    tasks_view.controls.pop()
+                    tasks_view.controls.append(
+                        Row(
+                        controls=[
+                            st,
+                            Text(str(cnt+1) + ' -->> ' + video.title + ' has been successfully downloaded.', font_family=default),
+                            Text("File Size = " + MB, font_family=default)]
+                            )
+                        )
                     view.update()
-                    # print(str(cnt) +'-->>' + colored(video.title,'cyan') + " has been successfully downloaded.")
+                    print(str(cnt) +'-->>' + colored(video.title,'cyan') + " has been successfully downloaded.")
                 except:
                     print('cant download')
                     pass
+            status_view.controls.append(Row([Text(value="All Songs Downloaded Successfully", weight="bold")]))
+            view.update()
 
     status_view = Column()
-    tasks_view = ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
+    tasks_view = ListView(expand=1, spacing=10, padding=1, auto_scroll=True)
     view = Column(
         spacing=5,
         expand=True,
         controls=[
-            Row([Text(value="YT-Downloader", style="headlineMedium")],
-                alignment="center"),
+            #1
+                Row([Text(value="YT-Downloader", style="headlineMedium")],alignment="center"),
+                
+                #2
+                Divider(),
 
-            Row([Text(value="Download Location"), ElevatedButton(
-                "Open directory",
-                icon=icons.FOLDER_OPEN,
-                on_click=lambda _: get_directory_dialog.get_directory_path(),
-                disabled=page.web,
-            ),
-                directory_path], alignment="center"),
-            Divider(),
-            Row(
-                controls=[
-                    Text(value="Artist or Folder Name"),
-                    artist_name,
-                    Text(value="Choose a Format :- "),
-                    frmt
-                ],
-                spacing=15,
-                alignment=CENTER
-            ),
+                #3
+                Row([Text(value="Download Location"), ElevatedButton("Open directory",icon=icons.FOLDER_OPEN,on_click=lambda _: get_directory_dialog.get_directory_path(),),pathText],alignment="center"),
 
-            Row(
-                controls=[
-                    url_type,
-                    url_id,
-                ],
-                spacing=15,
-                alignment=CENTER,
+                #4
+                Divider(),
 
-            ),
-
-
-            Row([ElevatedButton(text="Download", on_click=add_clicked,
-                icon="download")], alignment="center"),
-            Divider(),
-            Row(
+                #5
+                Row(
                 [
-                    Container(
-                        content=status_view,
-                        alignment=alignment.center,
-                    ),
-                    VerticalDivider(),
-                    Row([tasks_view], spacing=0),
-                ],
-                spacing=0,
-                expand=True,
-            ),
-            Row(
+                Text(value="Artist or Folder Name"),
+                artist_name,
+                Text(value="Choose a Format :- "),
+                frmt
+                ],alignment="center"),
 
-                controls=[Text('made with \u2764\ufe0f by SAM'),
-                          ],
-            ),
+                #5
+                Row(
+                [
+                url_type,
+                url_id,
+                ],alignment="center"),
+
+                #7
+                Row([ElevatedButton(text="Download", on_click=downloadAction,icon="download")], alignment="center"),
+
+                #8
+                Divider(),
+
+                #9
+                Container(
+                    content = 
+                    Row(
+                        [
+                            Column([Row([Text(value="Status")],alignment="center"),Divider(),status_view],width=230),
+                            VerticalDivider(),
+                            Column([Row([Text(value="Download Details")],alignment="center"),Divider(),tasks_view],spacing=0,expand=True)
+                        ],
+                            spacing=4
+                        ),
+
+                    bgcolor=colors.WHITE,
+                    width=1360,
+                    height=350,
+                )
 
         ],
     )
