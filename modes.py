@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # importing packages
 from email.policy import default
-from tkinter import CENTER
+from operator import index
+from tkinter import CENTER, N
 import flet
 import pytube
 import threading 
@@ -37,13 +38,12 @@ from flet import (
     ElevatedButton,
     Radio,
     RadioGroup,
-    Stack,
     ListTile,
     ListView,
     Card,
     TextButton,
-    Image, Page, Row, Stack, Text,
-    Icon,
+    Image, 
+    Stack,
     alignment,
     colors,
     ProgressBar,
@@ -74,18 +74,26 @@ def main(page: Page):
     }
     page.theme = Theme(font_family="B6")
     page.horizontal_alignment = "center"
-    artist_name = TextField(hint_text="Artist name? eg: - Justin Bieber")
-    url_id = TextField(hint_text="URL? eg:- https://www.youtube.com/c/justinbieber/videos", disabled=True, width=600)
-    url_id_1 = TextField(hint_text="URL? eg:- https://www.youtube.com/watch?v=shSUDi4b2y8", width=600)
+    bulk_artist_name = TextField(hint_text="Artist name? eg: - Justin Bieber")
+    bulk_url_id = TextField(hint_text="URL? eg:- https://www.youtube.com/c/justinbieber/videos", disabled=True, width=600)
+    single_url_id = TextField(hint_text="URL? eg:- https://www.youtube.com/watch?v=shSUDi4b2y8", width=600)
 
 
 
     def viewDecider(n):
-        viewList = [mainView_1,mainView_2,mainView_3]
-        page.controls.pop()
-        page.add(viewList[n])
+        viewList = [single_mainView_1,bulk_mainView_2,settings_mainView_3]
+        rails = [single_view_rail,bulk_view_rail,settings_view_rail]
+        rails[n].selected_index = n
+        for v in viewList:
+            if v != viewList[n]:
+                v.visible = False
+                page.update()
+            else:
+                v.visible = True
+                page.update()
 
-    rail = NavigationRail(
+
+    single_view_rail = NavigationRail(
         selected_index=0,
         label_type="all",
         # extended=True,
@@ -111,15 +119,67 @@ def main(page: Page):
         on_change=lambda e: viewDecider(e.control.selected_index),
     )
 
+    bulk_view_rail = NavigationRail(
+        selected_index=1,
+        label_type="all",
+        # extended=True,
+        min_width=100,
+        min_extended_width=400,
+        leading=FloatingActionButton(icon=icons.DOWNLOADING, text="sleekTube"),
+        group_alignment=-0.9,
+        destinations=[
+            NavigationRailDestination(
+                icon=icons.DONE_OUTLINED, selected_icon=icons.DONE, label="SoloMode"
+            ),
+            NavigationRailDestination(
+                icon_content=Icon(icons.DONE_ALL_ROUNDED),
+                selected_icon_content=Icon(icons.DONE_ALL),
+                label="BulkMode",
+            ),
+            NavigationRailDestination(
+                icon=icons.SETTINGS_OUTLINED,
+                selected_icon_content=Icon(icons.SETTINGS),
+                label_content=Text("Settings"),
+            ),
+        ],
+        on_change=lambda e: viewDecider(e.control.selected_index),
+    )
+
+    settings_view_rail = NavigationRail(
+        selected_index=2,
+        label_type="all",
+        # extended=True,
+        min_width=100,
+        min_extended_width=400,
+        leading=FloatingActionButton(icon=icons.DOWNLOADING, text="sleekTube"),
+        group_alignment=-0.9,
+        destinations=[
+            NavigationRailDestination(
+                icon=icons.DONE_OUTLINED, selected_icon=icons.DONE, label="SoloMode"
+            ),
+            NavigationRailDestination(
+                icon_content=Icon(icons.DONE_ALL_ROUNDED),
+                selected_icon_content=Icon(icons.DONE_ALL),
+                label="BulkMode",
+            ),
+            NavigationRailDestination(
+                icon=icons.SETTINGS_OUTLINED,
+                selected_icon_content=Icon(icons.SETTINGS),
+                label_content=Text("Settings"),
+            ),
+        ],
+        on_change=lambda e: viewDecider(e.control.selected_index),
+    )
+
     def radiogroup_changed(e):
-        url_id.disabled = False
+        bulk_url_id.disabled = False
         page.update()
 
-    frmt = RadioGroup(content=Row([
+    downloadFormat = RadioGroup(content=Row([
         Radio(value="mp3", label="MP3"),
         Radio(value="mp4", label="MP4")]))
 
-    st = Row(
+    bulk_status_verified_logo = Row(
         controls=[
             Image(
                 src=f"https://www.pngitem.com/pimgs/m/302-3024199_instagram-verified-symbol-png-instagram-verified-logo-png.png",
@@ -130,7 +190,7 @@ def main(page: Page):
         ]
     )
 
-    url_type = RadioGroup(content=Column([
+    bulk_url_type = RadioGroup(content=Column([
         Radio(value="channel", label="Channel"),
         Radio(value="playlist", label="Playlist")], spacing=5), on_change=radiogroup_changed)
 
@@ -148,22 +208,22 @@ def main(page: Page):
         singleDownloader()
 
     def downloadActionForBulk(e):
-        view_2.update()
-        crtFolder(artist_name.value)
-        if (frmt.value == 'mp3'):
-            MP3_downloader()
+        bulkViewMode.update()
+        crtFolder(bulk_artist_name.value)
+        if (downloadFormat.value == 'mp3'):
+            bulk_MP3_downloader()
         else:
-            MP4_downloader()
+            bulk_MP4_downloader()
         
 
     
     def singleDownloader():
-        if(frmt.value == 'mp3'):
+        if(downloadFormat.value == 'mp3'):
             try:
-                yt = YouTube(url_id_1.value)
+                yt = YouTube(single_url_id.value)
                 pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
                 video = yt.streams.filter(only_audio=True).first()
-                destination = base_dir + artist_name.value
+                destination = base_dir + bulk_artist_name.value
                 fileSizeInBytes = video.filesize
                 MaxFileSize = fileSizeInBytes/1024000
                 MB = str(int(round(MaxFileSize))) + " MB"
@@ -175,8 +235,8 @@ def main(page: Page):
                             height=300,
                             fit="fill"
                         )
-                view_1_vT.controls.append(tImage)
-                view_1_vT.controls.append(
+                single_status_thumbnail.controls.append(tImage)
+                single_status_thumbnail.controls.append(
                     Row(
                         controls=[
                             Column([Text( str(cnt) + '  ' + u"\u27F6" + '   Downloading  ' + yt.title, font_family=default),
@@ -185,7 +245,7 @@ def main(page: Page):
                             spacing=0
                             )
                 )
-                view_1.update()
+                singleModeView.update()
                 destination = base_dir
                 def downMp3():
                     out_file = yt.streams.filter(only_audio=True).first().download(output_path=destination)
@@ -198,7 +258,7 @@ def main(page: Page):
                         pb.value = i * 0.01
                         sf = int(round(MaxFileSize)) / 2
                         sleep(sf * 0.1)
-                        view_1.update()
+                        singleModeView.update()
                 threading.Thread(target=downMp3).start()
                 threading.Thread(target=updatePB).start()
                 
@@ -206,10 +266,10 @@ def main(page: Page):
                 pass
         else:
             try:
-                yt = YouTube(url_id_1.value)
+                yt = YouTube(single_url_id.value)
                 pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
                 video = yt.streams.get_highest_resolution()
-                destination = base_dir + artist_name.value
+                destination = base_dir + bulk_artist_name.value
                 fileSizeInBytes = video.filesize
                 MaxFileSize = fileSizeInBytes/1024000
                 MB = str(int(round(MaxFileSize))) + " MB"
@@ -221,8 +281,8 @@ def main(page: Page):
                             height=300,
                             fit="fill"
                         )
-                view_1_vT.controls.append(tImage)
-                view_1_vT.controls.append(
+                single_status_thumbnail.controls.append(tImage)
+                single_status_thumbnail.controls.append(
                     Row(
                         controls=[
                             Column([Text( str(cnt) + '  ' + u"\u27F6" + '   Downloading  ' + yt.title, font_family=default),
@@ -231,7 +291,7 @@ def main(page: Page):
                             spacing=0
                             )
                 )
-                view_1.update()
+                singleModeView.update()
                 destination = base_dir
                 def downMp4():
                     yt.streams.get_highest_resolution().download(destination)
@@ -240,19 +300,19 @@ def main(page: Page):
                         pb.value = i * 0.01
                         sf = int(round(MaxFileSize)) / 20
                         sleep(sf * 0.1)
-                        view_1.update()
+                        singleModeView.update()
                 threading.Thread(target=downMp4).start()
                 threading.Thread(target=updatePB).start()
                        
             except:
                 pass
 
-    def MP4_downloader():
-        if (url_type.value == 'channel'):
-            c = pytube.Channel(url_id.value)
-            status_view.controls.append(Text(f'Downloading videos from: {c.channel_name}' + ' channel'))
-            status_view.controls.append(Text('Channel Contains:' + str(len(c.videos)) + ' videos', color=colors.BLUE))
-            view_2.update()
+    def bulk_MP4_downloader():
+        if (bulk_url_type.value == 'channel'):
+            c = pytube.Channel(bulk_url_id.value)
+            bulk_status_view.controls.append(Text(f'Downloading videos from: {c.channel_name}' + ' channel'))
+            bulk_status_view.controls.append(Text('Channel Contains:' + str(len(c.videos)) + ' videos', color=colors.BLUE))
+            bulkViewMode.update()
             for cnt, video in zip(range(0, len(c.videos)), c.videos):
                 url = video.thumbnail_url
                 tImage = Image(
@@ -262,14 +322,14 @@ def main(page: Page):
                             fit="fill",
                         )
                 video = video.streams.get_highest_resolution()
-                destination = base_dir + artist_name.value
+                destination = base_dir + bulk_artist_name.value
                 fileSizeInBytes = video.filesize
                 MaxFileSize = fileSizeInBytes/1024000
                 MB = str(int(round(MaxFileSize))) + " MB"
                 try:
                     pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
-                    status_view.controls.append(tImage)
-                    tasks_view.controls.append(
+                    bulk_status_view.controls.append(tImage)
+                    bulk_tasks_view.controls.append(
                         Row(
                         controls=[
                             Column([Text( str(cnt+1) + '  ' + u"\u27F6" + '   Downloading  ' + video.title, font_family=default),
@@ -282,38 +342,38 @@ def main(page: Page):
                         pb.value = i * 0.01
                         sf = int(round(MaxFileSize)) / 2
                         sleep(sf * 0.1)
-                        view_2.update()
+                        bulkViewMode.update()
 
-                    view_2.update()
+                    bulkViewMode.update()
                     video.download(output_path=destination)
-                    tasks_view.controls.pop()
-                    tasks_view.controls.append(Row(
-                        controls=[st, Text(
+                    bulk_tasks_view.controls.pop()
+                    bulk_tasks_view.controls.append(Row(
+                        controls=[bulk_status_verified_logo, Text(
                             str(cnt+1) + '  ' + u"\u27F6" + '  ' + video.title + ' has been successfully downloaded.', font_family=default),
                             Text("File Size = " + MB, font_family=default)]
                     ))
-                    status_view.controls.pop()
-                    view_2.update()
+                    bulk_status_view.controls.pop()
+                    bulkViewMode.update()
                     print(colored(video.title, 'cyan') + " has been successfully downloaded.")
                 except:
                     pass
-            status_view.controls.append(Row([Text(value="All Videos Downloaded Successfully", weight="bold")]))
-            view_2.update()
+            bulk_status_view.controls.append(Row([Text(value="All Videos Downloaded Successfully", weight="bold")]))
+            bulkViewMode.update()
         else:
-            p = pytube.Playlist(url_id.value)
-            status_view.controls.append(Text(f'Downloading videos from: {p.title}' + ' channel'))
-            status_view.controls.append(Text('Playlis Contains:' + str(len(p.videos)) + ' videos', color=colors.BLUE))
-            view_2.update()
+            p = pytube.Playlist(bulk_url_id.value)
+            bulk_status_view.controls.append(Text(f'Downloading videos from: {p.title}' + ' channel'))
+            bulk_status_view.controls.append(Text('Playlis Contains:' + str(len(p.videos)) + ' videos', color=colors.BLUE))
+            bulkViewMode.update()
             for cnt, video in zip(range(0, len(p.videos)), p.videos):
                 video = video.streams.get_highest_resolution()
-                destination = base_dir + artist_name.value
+                destination = base_dir + bulk_artist_name.value
                 fileSizeInBytes = video.filesize
                 MaxFileSize = fileSizeInBytes/1024000
                 MB = str(int(round(MaxFileSize))) + " MB"
                 print("File Size = {:00.00f} MB".format(MaxFileSize))
                 try:
                     pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
-                    tasks_view.controls.append(
+                    bulk_tasks_view.controls.append(
                         Column(
                         controls=[
                             Text( str(cnt+1) + '  ' + u"\u27F6" + '   Downloading  ' + video.title, font_family=default),
@@ -324,39 +384,39 @@ def main(page: Page):
                         pb.value = i * 0.01
                         sf = int(round(MaxFileSize)) / 2
                         sleep(sf * 0.1)
-                        view_2.update()
+                        bulkViewMode.update()
 
-                    view_2.update()
+                    bulkViewMode.update()
                     video.download(output_path=destination)
-                    tasks_view.controls.pop()
-                    tasks_view.controls.append(Row(
-                        controls=[st, Text(
+                    bulk_tasks_view.controls.pop()
+                    bulk_tasks_view.controls.append(Row(
+                        controls=[bulk_status_verified_logo, Text(
                             str(cnt+1) + '  ' + u"\u27F6" + '  ' + video.title  + ' has been successfully downloaded.', font_family=default),
                             Text("File Size = " + MB, font_family=default)]
                     ))
-                    view_2.update()
+                    bulkViewMode.update()
                     print(colored(video.title, 'cyan') + " has been successfully downloaded.")
                 except:
                     pass
-            status_view.controls.append(Row([Text(value="All Videos Downloaded Successfully", weight="bold")]))
-            view_2.update()
+            bulk_status_view.controls.append(Row([Text(value="All Videos Downloaded Successfully", weight="bold")]))
+            bulkViewMode.update()
 
 
-    def MP3_downloader():
-        if (url_type.value == 'channel'):
-            c = pytube.Channel(url_id.value)
-            status_view.controls.append(Text(f'Downloading videos from: {c.channel_name}' + ' channel'))
-            status_view.controls.append(Text('Channel Contains:' + str(len(c.videos)) + ' videos', color=colors.BLUE))
-            view_2.update()
+    def bulk_MP3_downloader():
+        if (bulk_url_type.value == 'channel'):
+            c = pytube.Channel(bulk_url_id.value)
+            bulk_status_view.controls.append(Text(f'Downloading videos from: {c.channel_name}' + ' channel'))
+            bulk_status_view.controls.append(Text('Channel Contains:' + str(len(c.videos)) + ' videos', color=colors.BLUE))
+            bulkViewMode.update()
             for cnt, video in zip(range(0, len(c.videos)), c.videos):
                 try:
                     video1 = video.streams.filter(only_audio=True).first()
-                    destination = base_dir + artist_name.value
+                    destination = base_dir + bulk_artist_name.value
                     fileSizeInBytes = video1.filesize
                     MaxFileSize = fileSizeInBytes/1024000
                     MB = str(int(round(MaxFileSize))) + " MB"
                     pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
-                    tasks_view.controls.append(
+                    bulk_tasks_view.controls.append(
                         Column(
                         controls=[
                             Text( str(cnt+1) + '  ' + u"\u27F6" + '   Downloading  ' + video.title, font_family=default),
@@ -367,45 +427,45 @@ def main(page: Page):
                         pb.value = i * 0.01
                         sf = int(round(MaxFileSize)) / 3
                         sleep(sf * 0.1)
-                        view_2.update()
+                        bulkViewMode.update()
 
-                    view_2.update()
-                    destination = base_dir + artist_name.value
+                    bulkViewMode.update()
+                    destination = base_dir + bulk_artist_name.value
                     out_file = video.streams.filter(
                         only_audio=True).first().download(output_path=destination)
                     # save the file
                     base, ext = os.path.splitext(out_file)
                     new_file = base + '.mp3'
                     os.rename(out_file, new_file)
-                    tasks_view.controls.pop()
-                    tasks_view.controls.append(Row(
-                        controls=[st, Text(
+                    bulk_tasks_view.controls.pop()
+                    bulk_tasks_view.controls.append(Row(
+                        controls=[bulk_status_verified_logo, Text(
                             str(cnt+1) + '  ' + u"\u27F6" + '  ' + video.title  + ' has been successfully downloaded.', font_family=default),
                             Text("File Size = " + MB, font_family=default)]
                     ))
-                    view_2.update()
+                    bulkViewMode.update()
                     print(colored(video.title, 'cyan') + " has been successfully downloaded.")
                 except:
                     pass
-            status_view.controls.append(Row([Text(value="All Songs Downloaded Successfully", weight="bold")]))
-            view_2.update()
+            bulk_status_view.controls.append(Row([Text(value="All Songs Downloaded Successfully", weight="bold")]))
+            bulkViewMode.update()
         else:
-            p = pytube.Playlist(url_id.value)
-            status_view.controls.append(Text('<<<< Status >>>>', color=colors.BLACK87))
-            status_view.controls.append(Text(f'Downloading videos by: {p.title}' + ' playlist'))
-            status_view.controls.append(Text('Playlist Contains:' + str(len(p.videos)) + ' videos', color=colors.BLUE))
-            view_2.update()
+            p = pytube.Playlist(bulk_url_id.value)
+            bulk_status_view.controls.append(Text('<<<< Status >>>>', color=colors.BLACK87))
+            bulk_status_view.controls.append(Text(f'Downloading videos by: {p.title}' + ' playlist'))
+            bulk_status_view.controls.append(Text('Playlist Contains:' + str(len(p.videos)) + ' videos', color=colors.BLUE))
+            bulkViewMode.update()
             print(f'Downloading videos by: {p.title}' + ' playlist')
     
             for cnt, video in zip(range(0, len(p.videos)), p.videos):
                 try:
                     video1 = video.streams.filter(only_audio=True).first()
-                    destination = base_dir + artist_name.value
+                    destination = base_dir + bulk_artist_name.value
                     fileSizeInBytes = video1.filesize
                     MaxFileSize = fileSizeInBytes/1024000
                     MB = str(int(round(MaxFileSize))) + " MB"
                     pb = ProgressBar(width=400,color="blue",bgcolor=colors.BLACK87)
-                    tasks_view.controls.append(
+                    bulk_tasks_view.controls.append(
                         Column(
                         controls=[
                             Text( str(cnt+1) + '  ' + u"\u27F6" + '   Downloading  ' + video.title, font_family=default),
@@ -416,42 +476,43 @@ def main(page: Page):
                         pb.value = i * 0.01
                         sf = int(round(MaxFileSize)) / 3
                         sleep(sf * 0.1)
-                        view_2.update()
+                        bulkViewMode.update()
 
-                    view_2.update()
-                    destination = base_dir + artist_name.value
+                    bulkViewMode.update()
+                    destination = base_dir + bulk_artist_name.value
                     out_file = video.streams.filter(only_audio=True).first().download(output_path=destination)
                     # save the file
                     base, ext = os.path.splitext(out_file)
                     new_file = base + '.mp3'
                     os.rename(out_file, new_file)
                     # result of success
-                    tasks_view.controls.pop()
-                    tasks_view.controls.append(
+                    bulk_tasks_view.controls.pop()
+                    bulk_tasks_view.controls.append(
                         Row(
                         controls=[
-                            st,
+                            bulk_status_verified_logo,
                             Text(str(cnt+1) + '  ' + u"\u27F6" + '  ' + video.title + ' has been successfully downloaded.', font_family=default),
                             Text("File Size = " + MB, font_family=default)]
                             )
                         )
-                    view_2.update()
+                    bulkViewMode.update()
                     print(str(cnt) +'-->>' + colored(video.title,'cyan') + " has been successfully downloaded.")
                 except:
                     print('cant download')
                     pass
-            status_view.controls.append(Row([Text(value="All Songs Downloaded Successfully", weight="bold")]))
-            view_2.update()
+            bulk_status_view.controls.append(Row([Text(value="All Songs Downloaded Successfully", weight="bold")]))
+            bulkViewMode.update()
 
-    status_view = Column()
-    tasks_view = ListView(expand=1, spacing=10, padding=1, auto_scroll=True)
-    view_1_vT = Column(width=680, height=400)
-    view_1_dd  = Row([view_1_vT],spacing=0)
-    view_1 = Column(
+    bulk_status_view = Column()
+    bulk_tasks_view = ListView(expand=1, spacing=10, padding=1, auto_scroll=True)
+    single_status_thumbnail = Column(width=680, height=400)
+    single_status  = Row([single_status_thumbnail],spacing=0)
+    singleModeView = Column(
         spacing=5,
         expand=True,
         controls=[
-            #1
+            
+                #1
                 Row([Text(value="Single Mode - Download one Youtube Video", style="headlineSmall")],alignment="center"),
                 
                 #2
@@ -466,8 +527,8 @@ def main(page: Page):
                 #5
                 Row(
                 [
-                frmt,
-                url_id_1,
+                downloadFormat,
+                single_url_id,
                 ],alignment="center"),
 
                 #6
@@ -478,7 +539,7 @@ def main(page: Page):
 
                 #8
                 Container(
-                    content = view_1_dd,
+                    content = single_status,
                     bgcolor=colors.WHITE,
                     width=1360,
                     height=390,
@@ -492,7 +553,7 @@ def main(page: Page):
         ],
     )
 
-    view_2 = Column(
+    bulkViewMode = Column(
         spacing=5,
         expand=True,
         controls=[
@@ -512,16 +573,16 @@ def main(page: Page):
                 Row(
                 [
                 Text(value="Artist or Folder Name"),
-                artist_name,
+                bulk_artist_name,
                 Text(value="Choose a Format :- "),
-                frmt
+                downloadFormat
                 ],alignment="center"),
 
                 #5
                 Row(
                 [
-                url_type,
-                url_id,
+                bulk_url_type,
+                bulk_url_id,
                 ],alignment="center"),
 
                 #7
@@ -535,9 +596,9 @@ def main(page: Page):
                     content = 
                     Row(
                         [
-                            Column([Row([Text(value="Status")],alignment="center"),Divider(),status_view],width=230),
+                            Column([Row([Text(value="Status")],alignment="center"),Divider(),bulk_status_view],width=230),
                             VerticalDivider(),
-                            Column([Row([Text(value="Download Details")],alignment="center"),Divider(),tasks_view],spacing=0,expand=True)
+                            Column([Row([Text(value="Download Details")],alignment="center"),Divider(),bulk_tasks_view],spacing=0,expand=True)
                         ],
                             spacing=4
                         ),
@@ -555,36 +616,39 @@ def main(page: Page):
         ],
     )
 
-    mainView_1 = Row(
+    single_mainView_1 = Row(
             [
-                rail,
+                single_view_rail,
                 VerticalDivider(width=1),
-                view_1
+                singleModeView
             ],
             expand=True,
         )
 
-    mainView_2 = Row(
+    bulk_mainView_2 = Row(
             [
-                rail,
+                
+                bulk_view_rail,
                 VerticalDivider(width=1),
-                view_2
+                bulkViewMode
             ],
             expand=True,
+            visible=False
         )
-
-    mainView_3 = Row(
+    
+    settings_mainView_3 = Row(
             [
-                rail,
+                settings_view_rail,
                 VerticalDivider(width=1),
                 Column([Text("thirdPage!")], alignment="start", expand=True),
             ],
             expand=True,
+            visible=False
         )
 
     page.horizontal_alignment = "center"
     page.scroll = 'none'
-    page.add(mainView_1)
+    page.add(single_mainView_1,bulk_mainView_2,settings_mainView_3)
     page.update()
 
 
