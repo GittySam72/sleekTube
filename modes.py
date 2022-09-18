@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # importing packages
 from email.policy import default
+from multiprocessing.sharedctypes import Value
+from pathlib import Path
 from operator import index
 from tkinter import CENTER, N
 from turtle import bgcolor
@@ -60,7 +62,7 @@ from flet import (
     ProgressRing
 )
 
-base_dir = '/home/greytesla/Desktop/Sam/Testing/'
+base_dir = str(Path.home() / "Downloads")
 
 
 def crtFolder(fldname):
@@ -96,13 +98,19 @@ def main(page: Page):
         Radio(value="mp4", label="MP4")]))
     
     def get_directory_result(e: FilePickerResultEvent):
-        pathText.value = e.path if e.path else "Cancelled!"
-        pathText.update()
-        global base_dir
-        base_dir = e.path + '/'
+        if(single_mainView_1.visible == True):
+            single_pathText.value = e.path if e.path else "Cancelled!"
+            single_pathText.update()
+            single_pathText.visible =True
+        else:
+            bulk_pathText.value = e.path if e.path else "Cancelled!"
+            bulk_pathText.update()
+            global base_dir
+            base_dir = e.path + '/'
 
     get_directory_dialog = FilePicker(on_result=get_directory_result)
-    pathText = Text()
+    bulk_pathText = Text()
+    single_pathText = Text(value=str(Path.home() / "Downloads"),visible=False)
     page.overlay.extend([get_directory_dialog])
     # --------------------------------------------
 
@@ -178,7 +186,7 @@ def main(page: Page):
                 single_video_quality.value = "128Hz"
                 single_video_format.value = "MP3"
                 single_video_link.value = single_url_id.value
-                single_video_folder.value = base_dir
+                single_video_folder.value = single_pathText.value
                 single_status.update()
                 pb = ProgressBar(width=400, color='blue',
                                  bgcolor=colors.BLACK87)
@@ -239,7 +247,7 @@ def main(page: Page):
                 single_video_quality.value = "1080P"
                 single_video_format.value = "MP4"
                 single_video_link.value = single_url_id.value
-                single_video_folder.value = base_dir
+                single_video_folder.value = single_pathText.value
                 single_status.update()
                 pb = ProgressBar(width=400, color='blue',
                                  bgcolor=colors.BLACK87)
@@ -503,7 +511,7 @@ def main(page: Page):
 
             #3
             Row([Text(value="Download Location"), ElevatedButton("Open directory", icon=icons.FOLDER_OPEN,
-                on_click=lambda _: get_directory_dialog.get_directory_path(),), pathText], alignment="center"),
+            on_click=lambda _: get_directory_dialog.get_directory_path(),),single_pathText], alignment="center"),
 
             #4
             Divider(),
@@ -852,7 +860,7 @@ def main(page: Page):
 
             #3
             Row([Text(value="Download Location"), ElevatedButton("Open directory", icon=icons.FOLDER_OPEN,
-                on_click=lambda _: get_directory_dialog.get_directory_path(),), pathText], alignment="center"),
+                on_click=lambda _: get_directory_dialog.get_directory_path(),), bulk_pathText], alignment="center"),
 
             #4
             Divider(),
